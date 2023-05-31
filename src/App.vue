@@ -3,87 +3,108 @@
 import IconDocumentation from "@/components/icons/IconDocumentation.vue";
 import {computed, onMounted, reactive, ref, watch} from "vue"
 
-const userInput = ref();
+const userInput = ref('');
 const focusNatId = ref(null);
+const localeOptions = {year: 'numeric', month: 'long', day: 'numeric'};
 
 
 onMounted(() => {
   userInput.value = localStorage.getItem('storedData');
   focusNatId.value.focus();
 })
+
 function extractDateOfBirthAndInfo(nationalId) {
   const centuryNumber = parseInt(nationalId.charAt(0));
   const centuryOffset = (centuryNumber - 1) * 100;
-  const yearOfBirth = 1800 + centuryOffset + parseInt(nationalId.substr(1, 2));
-  const monthOfBirth = parseInt(nationalId.substr(3, 2));
-  const dayOfBirth = parseInt(nationalId.substr(5, 2));
-  const stateCode = nationalId.substr(7, 2); // State code
-
-  const states = {
-    '01': 'القاهرة',
-    '02': 'الإسكندرية',
-    '03': 'بورسعيد',
-    '04': 'السويس',
-    '11': 'دمياط',
-    '12': 'الدقهلية',
-    '13': 'الشرقية',
-    '14': 'القليوبية',
-    '15': 'كفر الشيخ',
-    '16': 'الغربية',
-    '17': 'المنوفية',
-    '18': 'البحيرة',
-    '19': 'الإسماعيلية',
-    '21': 'الجيزة',
-    '22': 'بني سويف',
-    '23': 'الفيوم',
-    '24': 'المنيا',
-    '25': 'أسيوط',
-    '26': 'سوهاج',
-    '27': 'قنا',
-    '28': 'أسوان',
-    '29': 'الأقصر',
-    '31': 'البحر الأحمر',
-    '32': 'الوادي الجديد',
-    '33': 'مطروح',
-    '34': 'شمال سيناء',
-    '35': 'جنوب سيناء',
-    '88': 'خارج الجمهورية'
-  };
-  const state = states[stateCode]; // State name
-  const genderNumber = parseInt(nationalId.charAt(12));
-  const isMale = genderNumber % 2 !== 0;
-  const options = {year: 'numeric', month: 'long', day: 'numeric' };
-  const dateOfBirth = new Date(yearOfBirth, monthOfBirth - 1, dayOfBirth).toLocaleDateString('ar-EG', options);
-
-  return {
+  let yearOfBirth = 1800 + centuryOffset;
+  if (nationalId.length >= 2) {
+    nationalId.length == 2 ? nationalId += '0' : '';
+    yearOfBirth += parseInt(nationalId.substr(1, 2));
+  }
+  let result = {
     year: yearOfBirth,
-    month: monthOfBirth,
-    day: dayOfBirth,
-    date: dateOfBirth,
-    state: state,
-    isMale: isMale,
+    month: '',
+    day: '',
+    date: '',
+    date_age: '',
+    state: '',
+    isMale: null,
   };
+  if (nationalId.length >= 5) {
+    const monthOfBirth = parseInt(nationalId.substr(3, 2));
+    result.month = monthOfBirth;
+  }
+  if (nationalId.length >= 7) {
+    const dayOfBirth = parseInt(nationalId.substr(5, 2));
+    result.day = dayOfBirth;
+  }
+  if (nationalId.length >= 9) {
+    const stateCode = nationalId.substr(7, 2);
+    const states = {
+      '01': 'القاهرة',
+      '02': 'الإسكندرية',
+      '03': 'بورسعيد',
+      '04': 'السويس',
+      '11': 'دمياط',
+      '12': 'الدقهلية',
+      '13': 'الشرقية',
+      '14': 'القليوبية',
+      '15': 'كفر الشيخ',
+      '16': 'الغربية',
+      '17': 'المنوفية',
+      '18': 'البحيرة',
+      '19': 'الإسماعيلية',
+      '21': 'الجيزة',
+      '22': 'بني سويف',
+      '23': 'الفيوم',
+      '24': 'المنيا',
+      '25': 'أسيوط',
+      '26': 'سوهاج',
+      '27': 'قنا',
+      '28': 'أسوان',
+      '29': 'الأقصر',
+      '31': 'البحر الأحمر',
+      '32': 'الوادي الجديد',
+      '33': 'مطروح',
+      '34': 'شمال سيناء',
+      '35': 'جنوب سيناء',
+      '88': 'خارج الجمهورية'
+    };
+    result.state = states[stateCode];
+  }
+  if (nationalId.length >= 13) {
+    const genderNumber = parseInt(nationalId.charAt(12));
+    result.isMale = genderNumber % 2 !== 0;
+  }
+  if (nationalId.length >= 7) {
+    result.date = new Date(result.year, result.month - 1, result.day).toLocaleDateString('ar-EG', localeOptions);
+    result.date_age = new Date(result.year, result.month - 1, result.day);
+  }
+  return result;
 }
-function write(){
+
+function write() {
   localStorage.setItem('storedData', userInput.value);
 }
 
 const DOB = reactive([0, '', '', '']);
 
+function age(birthday){
+  const ageDifMs = Date.now() - birthday;
+  const ageDate = new Date(ageDifMs);
+  return Math.abs(ageDate.getUTCFullYear() - 1970);
+}
 
-watch(userInput, ()=>{
+watch(userInput, () => {
   write();
   let length = userInput.value.toString().length;
-  if (length < 1){
+  if (length < 1) {
     DOB[0] = 0;
-  }
-  else if (length >= 1 && length < 14){
+  } else if (length >= 1 && length < 14) {
     DOB[0] = 1;
-  }
-  else if (length == 14){
+  } else if (length == 14) {
     DOB[0] = 2;
-  }
-  else {
+  } else {
     DOB[0] = 3;
   }
 });
@@ -102,7 +123,8 @@ watch(userInput, ()=>{
         </div>
 
         <div class="mt-6 pb-8 border-b-2">
-          <label for="id" class="block mb-2  text-sm font-medium text-gray-900 dark:text-white"> الرقم القومي (14 رقم)</label>
+          <label for="id" class="block mb-2  text-sm font-medium text-gray-900 dark:text-white"> الرقم القومي (14
+            رقم)</label>
           <input type="number" v-model="userInput" ref="focusNatId"
                  class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
                  placeholder="29805140124832" maxlength="14" required
@@ -110,8 +132,8 @@ watch(userInput, ()=>{
         </div>
 
         <div class="text-center pt-4">
-          <p v-if="DOB[0]" class="pb-2" >
-          <div v-if="DOB[0] == 1" class="text-orange-500"> رقم غير مكتمل  </div>
+          <p v-if="DOB[0]" class="pb-2">
+            <div v-if="DOB[0] == 1" class="text-orange-500"> رقم غير مكتمل</div>
             <div v-else-if="DOB[0] == 2" class="text-green-500">رقم صحيح</div>
             <div v-else class="text-red-500">رقم خاطيء</div>
           </p>
@@ -122,20 +144,44 @@ watch(userInput, ()=>{
                 <div class="overflow-hidden">
                   <table class="min-w-full table-fixed text-right text-sm font-light">
                     <tbody>
-                      <tr class="bg-neutral-100 dark:border-neutral-500 dark:bg-neutral-700">
-                        <td class="whitespace-nowrap px-6 py-4 font-semibold text-center">تاريخ الميلاد</td>
-                        <td class="whitespace-nowrap px-6 py-4  text-center">
-                          {{ extractDateOfBirthAndInfo('29904260103712').date }} - 24 سنة
-                        </td>
-                      </tr>
-                      <tr class="bg-white dark:border-neutral-500 dark:bg-neutral-700">
-                        <td class="whitespace-nowrap px-6 py-4  font-semibold text-center">النوع</td>
-                        <td class="whitespace-nowrap px-6 py-4  text-center">ذكر</td>
-                      </tr>
-                      <tr class="bg-neutral-100 dark:border-neutral-500 dark:bg-neutral-700">
-                        <td class="whitespace-nowrap px-6 py-4  font-semibold text-center">محل الميلاد</td>
-                        <td class="whitespace-nowrap px-6 py-4  text-center">القاهرة</td>
-                      </tr>
+                    <tr class="bg-neutral-100 dark:border-neutral-500 dark:bg-neutral-700">
+                      <td class="whitespace-nowrap px-6 py-4 font-semibold text-center w-1/2">تاريخ الميلاد</td>
+                      <td class="whitespace-nowrap px-6 py-4  text-center">
+                        <div v-if="userInput.toString().length == 0">
+                          -
+                        </div>
+                        <div v-else-if="userInput.toString().length < 7 && userInput.toString().length > 0">
+                          {{
+                            `${extractDateOfBirthAndInfo(userInput.toString()).month ?? '60'} ${extractDateOfBirthAndInfo(userInput.toString()).year} `
+                          }}
+                        </div>
+                        <div v-else>
+                          {{ `${extractDateOfBirthAndInfo(userInput.toString()).date}  - ${age(extractDateOfBirthAndInfo(userInput.toString()).date_age)} سنة ` }}
+                        </div>
+                      </td>
+                    </tr>
+                    <tr class="bg-white dark:border-neutral-500 dark:bg-neutral-700 w-1/2">
+                      <td class="whitespace-nowrap px-6 py-4  font-semibold text-center">محل الميلاد</td>
+                      <td class="whitespace-nowrap px-6 py-4  text-center">
+                        <div v-if="userInput.toString().length >= 9">
+                          {{ `${extractDateOfBirthAndInfo(userInput.toString()).state} ` }}
+                        </div>
+                        <div v-else>
+                          -
+                        </div>
+                      </td>
+                    </tr>
+                    <tr class="bg-neutral-100 dark:border-neutral-500 dark:bg-neutral-700 w-1/2">
+                      <td class="whitespace-nowrap px-6 py-4  font-semibold text-center">النوع</td>
+                      <td class="whitespace-nowrap px-6 py-4  text-center">
+                        <div v-if="userInput.toString().length >= 13">
+                          {{ `${extractDateOfBirthAndInfo(userInput.toString()).isMale ? 'ذكر' : 'أنثى'} ` }}
+                        </div>
+                        <div v-else>
+                          -
+                        </div>
+                      </td>
+                    </tr>
                     </tbody>
                   </table>
                 </div>
@@ -159,6 +205,7 @@ input[type="number"]::-webkit-inner-spin-button {
 
   margin: 0; /* <-- Apparently some margin are still there even though it's hidden */
 }
+
 input[type="number"] {
   -moz-appearance: textfield;
 }
