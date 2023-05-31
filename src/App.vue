@@ -14,9 +14,11 @@ onMounted(() => {
 })
 
 function extractDateOfBirthAndInfo(nationalId) {
+  const centuryFlag = true;
   const centuryNumber = parseInt(nationalId.charAt(0));
   const centuryOffset = (centuryNumber - 1) * 100;
   let yearOfBirth = 1800 + centuryOffset;
+
   if (nationalId.length >= 2) {
     nationalId.length == 2 ? nationalId += '0' : '';
     yearOfBirth += parseInt(nationalId.substr(1, 2));
@@ -29,7 +31,13 @@ function extractDateOfBirthAndInfo(nationalId) {
     date_age: '',
     state: '',
     isMale: null,
+    centuryFlag: true,
   };
+  if (centuryNumber !== 2 && centuryNumber !== 3){
+    result.year = 'صيغة خاطئة';
+    result.centuryFlag= false;
+    return result;
+  }
   if (nationalId.length >= 5) {
     const monthOfBirth = parseInt(nationalId.substr(3, 2));
     result.month = monthOfBirth;
@@ -87,7 +95,7 @@ function write() {
   localStorage.setItem('storedData', userInput.value);
 }
 
-const DOB = reactive([0, '', '', '']);
+let numberChecker = reactive(0);
 
 function age(birthday){
   const ageDifMs = Date.now() - birthday;
@@ -99,13 +107,13 @@ watch(userInput, () => {
   write();
   let length = userInput.value.toString().length;
   if (length < 1) {
-    DOB[0] = 0;
+    numberChecker = 0;
   } else if (length >= 1 && length < 14) {
-    DOB[0] = 1;
+    numberChecker = 1;
   } else if (length == 14) {
-    DOB[0] = 2;
+    numberChecker = 2;
   } else {
-    DOB[0] = 3;
+    numberChecker = 3;
   }
 });
 
@@ -114,7 +122,7 @@ watch(userInput, () => {
 
 <template>
   <div class="flex items-center justify-center h-screen">
-    <div class="w-full max-w-sm mx-auto p-4">
+    <div class="w-full max-w-md mx-auto p-4">
       <div class="bg-white rounded-lg p-8 shadow">
 
         <div class="flex justify-between items-center pb-6 border-b-2">
@@ -132,10 +140,17 @@ watch(userInput, () => {
         </div>
 
         <div class="text-center pt-4">
-          <p v-if="DOB[0]" class="pb-2">
-            <div v-if="DOB[0] == 1" class="text-orange-500"> رقم غير مكتمل</div>
-            <div v-else-if="DOB[0] == 2" class="text-green-500">رقم صحيح</div>
-            <div v-else class="text-red-500">رقم خاطيء</div>
+          <p v-if="numberChecker" class="pb-2">
+            <div v-if="numberChecker == 1" class="text-orange-500"> رقم غير مكتمل</div>
+            <div v-else-if="numberChecker == 2" >
+              <div v-if="extractDateOfBirthAndInfo(userInput.toString()).centuryFlag" class="text-green-500">
+              رقم صحيح
+              </div>
+              <div v-else class="text-red-500">
+                صيغة خاطئة
+              </div>
+            </div>
+            <div v-else class="text-red-500">صيغة خاطئة</div>
           </p>
 
           <div class="flex flex-col">
@@ -146,24 +161,26 @@ watch(userInput, () => {
                     <tbody>
                     <tr class="bg-neutral-100 dark:border-neutral-500 dark:bg-neutral-700">
                       <td class="whitespace-nowrap px-6 py-4 font-semibold text-center w-1/2">تاريخ الميلاد</td>
-                      <td class="whitespace-nowrap px-6 py-4  text-center">
-                        <div v-if="userInput.toString().length == 0">
+                      <td class=" px-6 py-4 text-center w-1/2">
+                        <template v-if="userInput.toString().length === 0">
                           -
-                        </div>
-                        <div v-else-if="userInput.toString().length < 7 && userInput.toString().length > 0">
-                          {{
-                            `${extractDateOfBirthAndInfo(userInput.toString()).month ?? '60'} ${extractDateOfBirthAndInfo(userInput.toString()).year} `
-                          }}
-                        </div>
-                        <div v-else>
-                          {{ `${extractDateOfBirthAndInfo(userInput.toString()).date}  - ${age(extractDateOfBirthAndInfo(userInput.toString()).date_age)} سنة ` }}
-                        </div>
+                        </template>
+                        <template v-else-if="userInput.toString().length < 7">
+                          {{ `${extractDateOfBirthAndInfo(userInput.toString()).month ?? '60'} ${extractDateOfBirthAndInfo(userInput.toString()).year}` }}
+                        </template>
+                        <template v-else>
+                          <div v-if="extractDateOfBirthAndInfo(userInput.toString()).centuryFlag">
+                          {{ `${extractDateOfBirthAndInfo(userInput.toString()).date} - ${age(extractDateOfBirthAndInfo(userInput.toString()).date_age)} سنة` }}
+                          </div>
+                          <div v-else> صيغة خاطئة </div>
+                        </template>
                       </td>
                     </tr>
+
                     <tr class="bg-white dark:border-neutral-500 dark:bg-neutral-700 w-1/2">
-                      <td class="whitespace-nowrap px-6 py-4  font-semibold text-center">محل الميلاد</td>
+                      <td class="whitespace-nowrap px-6 py-4  font-semibold text-center w-1/2">محل الميلاد</td>
                       <td class="whitespace-nowrap px-6 py-4  text-center">
-                        <div v-if="userInput.toString().length >= 9">
+                        <div v-if="userInput.toString().length >= 9 && extractDateOfBirthAndInfo(userInput.toString()).centuryFlag">
                           {{ `${extractDateOfBirthAndInfo(userInput.toString()).state} ` }}
                         </div>
                         <div v-else>
@@ -172,9 +189,9 @@ watch(userInput, () => {
                       </td>
                     </tr>
                     <tr class="bg-neutral-100 dark:border-neutral-500 dark:bg-neutral-700 w-1/2">
-                      <td class="whitespace-nowrap px-6 py-4  font-semibold text-center">النوع</td>
+                      <td class="whitespace-nowrap px-6 py-4  font-semibold text-center w-1/2">النوع</td>
                       <td class="whitespace-nowrap px-6 py-4  text-center">
-                        <div v-if="userInput.toString().length >= 13">
+                        <div v-if="userInput.toString().length >= 13 && userInput.toString().length <= 14 && extractDateOfBirthAndInfo(userInput.toString()).centuryFlag">
                           {{ `${extractDateOfBirthAndInfo(userInput.toString()).isMale ? 'ذكر' : 'أنثى'} ` }}
                         </div>
                         <div v-else>
