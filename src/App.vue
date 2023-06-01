@@ -3,13 +3,13 @@
 import IconDocumentation from "@/components/icons/IconDocumentation.vue";
 import {computed, onMounted, reactive, ref, watch} from "vue"
 
-const userInput = ref('');
+const userInput = ref('29412010135971');
 const focusNatId = ref(null);
 const localeOptions = {year: 'numeric', month: 'long', day: 'numeric'};
 
 
 onMounted(() => {
-  userInput.value = localStorage.getItem('storedData');
+  // userInput.value = localStorage.getItem('storedData');
   focusNatId.value.focus();
 })
 
@@ -104,7 +104,7 @@ function age(birthday){
 }
 
 watch(userInput, () => {
-  write();
+  //write();
   let length = userInput.value.toString().length;
   if (length < 1) {
     numberChecker = 0;
@@ -131,10 +131,10 @@ watch(userInput, () => {
         </div>
 
         <div class="mt-6 pb-8 border-b-2">
-          <label for="id" class="block mb-2  text-sm font-medium text-gray-900 dark:text-white"> الرقم القومي (14
+          <label for="id" class="block mb-2  text-sm font-medium text-gray-900"> الرقم القومي (14
             رقم)</label>
           <input type="number" v-model="userInput" ref="focusNatId"
-                 class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
+                 class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 "
                  placeholder="29805140124832" maxlength="14" required
           />
         </div>
@@ -159,7 +159,7 @@ watch(userInput, () => {
                 <div class="overflow-hidden">
                   <table class="min-w-full table-fixed text-right text-sm font-light">
                     <tbody>
-                    <tr class="bg-neutral-100 dark:border-neutral-500 dark:bg-neutral-700">
+                    <tr class="bg-neutral-100">
                       <td class="whitespace-nowrap px-6 py-4 font-semibold text-center w-1/2">تاريخ الميلاد</td>
                       <td class=" px-6 py-4 text-center w-1/2">
                         <template v-if="userInput.toString().length === 0">
@@ -177,7 +177,7 @@ watch(userInput, () => {
                       </td>
                     </tr>
 
-                    <tr class="bg-white dark:border-neutral-500 dark:bg-neutral-700 w-1/2">
+                    <tr class="bg-white">
                       <td class="whitespace-nowrap px-6 py-4  font-semibold text-center w-1/2">محل الميلاد</td>
                       <td class="whitespace-nowrap px-6 py-4  text-center">
                         <div v-if="userInput.toString().length >= 9 && extractDateOfBirthAndInfo(userInput.toString()).centuryFlag">
@@ -188,7 +188,7 @@ watch(userInput, () => {
                         </div>
                       </td>
                     </tr>
-                    <tr class="bg-neutral-100 dark:border-neutral-500 dark:bg-neutral-700 w-1/2">
+                    <tr class="bg-neutral-100 w-1/2">
                       <td class="whitespace-nowrap px-6 py-4  font-semibold text-center w-1/2">النوع</td>
                       <td class="whitespace-nowrap px-6 py-4  text-center">
                         <div v-if="userInput.toString().length >= 13 && userInput.toString().length <= 14 && extractDateOfBirthAndInfo(userInput.toString()).centuryFlag">
