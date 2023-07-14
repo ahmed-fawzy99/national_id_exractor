@@ -3,7 +3,7 @@
 This template should help get you started developing with Vue 3 in Vite.
 
 # Live Demo
-http://nid-checker.ahmeddeghady.com/
+https://ahmed-fawzy99.github.io/EGID-InfoExtractor/
 
 ## Recommended IDE Setup
 
